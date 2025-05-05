@@ -1,0 +1,10 @@
+{
+  "prettier.configPath": ".prettierrc.yml",
+  "prettier.requireConfig": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.removeUnusedImports": "always",
+    "source.organizeImports": "always",
+    "source.sortImports": "always"
+  }
+}
