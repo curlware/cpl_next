@@ -4,6 +4,11 @@ import { connectToDatabase } from '@/configs/dbConnect'
 import User from '@/models/User'
 import { revalidatePath } from 'next/cache'
 
+type UserInput = {
+  email: string
+  password: string
+}
+
 /**
  * Create a new user
  */
@@ -20,8 +25,6 @@ export async function createUser(userData: UserInput) {
     // Create new user
     const user = await User.create(userData)
 
-    // Return the user without password
-    const { password, ...userWithoutPassword } = user.toObject()
     revalidatePath('/dashboard/users')
     return { success: true }
   } catch (error: any) {
