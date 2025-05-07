@@ -23,7 +23,7 @@ export async function createUser(userData: UserInput) {
     // Return the user without password
     const { password, ...userWithoutPassword } = user.toObject()
     revalidatePath('/dashboard/users')
-    return { success: true, user: userWithoutPassword }
+    return { success: true }
   } catch (error: any) {
     return {
       error: error.message || 'Failed to create user',

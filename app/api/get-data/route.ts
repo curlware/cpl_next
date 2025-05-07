@@ -15,7 +15,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: content?.content || null
+      data: content || null
     })
   } catch (error: any) {
     console.error('Error fetching homepage content:', error)

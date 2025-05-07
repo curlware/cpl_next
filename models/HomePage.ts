@@ -2,9 +2,7 @@ import mongoose, { Schema } from 'mongoose'
 
 // Define the Site Content schema
 const homePageSchema = new Schema(
-  {
-    content: {}
-  },
+  {},
   {
     timestamps: true,
     toJSON: { virtuals: true },
