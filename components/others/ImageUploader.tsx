@@ -1,5 +1,6 @@
 'use client' // This component must be a client component
 
+import { cn } from '@/lib/utils'
 import {
   ImageKitAbortError,
   ImageKitInvalidRequestError,
@@ -7,23 +8,31 @@ import {
   ImageKitUploadNetworkError,
   upload
 } from '@imagekit/next'
-import { useRef, useState } from 'react'
+import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 type TProps = {
   fileId?: string
+  initialPreview?: string // Add optional initialPreview prop
   setFile: (value: MediaFile) => void
 }
 // ImageUploader component demonstrates file uploading using ImageKit's Next.js SDK.
-export default function ImageUploader({ fileId, setFile }: TProps) {
+export default function ImageUploader({ fileId, initialPreview, setFile }: TProps) {
   // State to keep track of the current upload progress (percentage)
-  const [progress, setProgress] = useState(0)
-  const [lastImageUrl, setLastImageUrl] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [preview, setPreview] = useState<string | undefined>(initialPreview)
 
   // Create a ref for the file input element to access its files easily
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Create an AbortController instance to provide an option to cancel the upload if needed.
   const abortController = new AbortController()
+
+  // Set initial preview if passed as prop
+  useEffect(() => {
+    setPreview(initialPreview)
+  }, [initialPreview])
 
   const authenticator = async () => {
     try {
@@ -77,18 +86,19 @@ export default function ImageUploader({ fileId, setFile }: TProps) {
         publicKey,
         file,
         fileName: file.name, // Optionally set a custom file name
-        // Progress callback to update upload progress state
-        onProgress: (event) => {
-          setProgress((event.loaded / event.total) * 100)
-        },
         // Abort signal to allow cancellation of the upload if needed.
         abortSignal: abortController.signal
       })
-      setFile({
+
+      const fileData = {
         file: uploadResponse.url,
         fileId: uploadResponse.fileId,
         thumbnail: uploadResponse.thumbnailUrl
-      })
+      }
+
+      // Update the preview
+      setPreview(uploadResponse.url)
+      setFile(fileData)
     } catch (error) {
       // Handle specific error types provided by the ImageKit SDK.
       if (error instanceof ImageKitAbortError) {
@@ -103,36 +113,61 @@ export default function ImageUploader({ fileId, setFile }: TProps) {
         // Handle any other errors that may occur.
         console.error('Upload error:', error)
       }
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleDeleteImage = async () => {
+    setLoading(true)
     if (fileId) {
       if (window.confirm('Are you sure you want to delete the previous image?')) {
-        await fetch(`/api/delete-image/?fileId=${fileId}`, {
-          method: 'DELETE'
-        })
+        try {
+          await fetch(`/api/delete-image/?fileId=${fileId}`, {
+            method: 'DELETE'
+          })
+          // Clear preview on delete
+          setPreview(undefined)
+        } catch (error) {
+          toast.warning('Failed to delete the previous image')
+          console.error('Error deleting image:', error)
+          setLoading(false)
+        }
       }
     }
     await handleUpload()
   }
 
   return (
-    <div className=''>
-      {/* File input element using React ref */}
-      <div className='my-2 border-slate-300 border p-2  rounded-md shadow overflow-hidden'>
+    <div className='space-y-3'>
+      <div className='flex flex-col'>
         <input
           type='file'
           ref={fileInputRef}
           onChange={handleDeleteImage}
-          className='overflow-hidden text-xs'
+          className={cn(
+            'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+            'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive cursor-pointer'
+          )}
         />
+
+        {/* Loading indicator */}
+        {loading ? (
+          <div className='my-2'>
+            <p className='text-amber-500 font-medium text-sm'>Wait, Uploading...</p>
+          </div>
+        ) : null}
+
+        {/* Image preview */}
+        {preview && (
+          <div className='mt-3'>
+            <div className='relative w-20 h-20 overflow-hidden rounded-md border border-border'>
+              <Image src={preview} alt='Uploaded image preview' fill className='object-cover' />
+            </div>
+          </div>
+        )}
       </div>
-      {/* Display the current upload progress
-      <div className='mt-4'>
-        <p className='mb-2'>Upload progress:</p>
-        <Progress value={progress} max={100} />
-      </div> */}
     </div>
   )
 }

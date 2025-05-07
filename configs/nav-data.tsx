@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users } from 'lucide-react'
+import { LayoutDashboard, Settings, Users } from 'lucide-react'
 
 export const adminNavItems = [
   {
@@ -10,5 +10,10 @@ export const adminNavItems = [
     icon: <Users className='w-4 h-4' />,
     label: 'Users',
     link: '/dashboard/users'
+  },
+  {
+    icon: <Settings className='w-4 h-4' />,
+    label: 'Site Settings',
+    link: '/dashboard/commons'
   }
 ]
