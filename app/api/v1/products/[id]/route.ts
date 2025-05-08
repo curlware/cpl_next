@@ -3,9 +3,10 @@ import Products from '@/models/Product'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET a single product by ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = params
+    const searchParams = new URL(request.url).searchParams
+    const id = searchParams.get('id')
 
     await connectToDatabase()
 
@@ -31,9 +32,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // UPDATE a product by ID
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = params
+    const searchParams = new URL(request.url).searchParams
+    const id = searchParams.get('id')
+
     const data = await request.json()
 
     await connectToDatabase()
@@ -63,10 +66,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE a product by ID
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest) {
+  const searchParams = new URL(request.url).searchParams
+  const id = searchParams.get('id')
   try {
-    const { id } = params
-
     await connectToDatabase()
 
     const product = await Products.findByIdAndDelete(id)
