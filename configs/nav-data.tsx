@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, LayoutList, Settings, Users } from 'lucide-react'
+import { Home, Info, LayoutDashboard, LayoutList, Settings, Users } from 'lucide-react'
 
 export const adminNavItems = [
   {
@@ -15,6 +15,11 @@ export const adminNavItems = [
     icon: <Home className='w-4 h-4' />,
     label: 'Home Page',
     link: '/dashboard/homepage'
+  },
+  {
+    icon: <Info className='w-4 h-4' />,
+    label: 'About Us',
+    link: '/dashboard/about-us'
   },
   {
     icon: <LayoutList className='w-4 h-4' />,
