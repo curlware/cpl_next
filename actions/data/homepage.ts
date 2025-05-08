@@ -12,8 +12,7 @@ export async function getHomePageData() {
   try {
     await connectToDatabase()
 
-    const data = await HomePage.findOne({})
-    // .populate('products.products')
+    const data = await HomePage.findOne({}).populate('products.products')
 
     return {
       success: true,

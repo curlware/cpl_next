@@ -1,9 +1,11 @@
 'use client'
 
 import { getHomePageData } from '@/actions/data/homepage'
+import { getProducts } from '@/actions/data/products'
 import ImageUploader from '@/components/others/ImageUploader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -22,6 +24,18 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import * as z from 'zod'
+
+// Product type definition for typescript
+type ProductType = {
+  _id: string
+  title: string
+  description?: string
+  images: Array<{
+    thumbnail?: string
+    file?: string
+    fileId?: string
+  }>
+}
 
 // Define the Zod schema for validation
 const homePageSchema = z.object({
@@ -60,7 +74,16 @@ const homePageSchema = z.object({
     .object({
       title: z.string().optional(),
       description: z.string().optional(),
-      products: z.array(z.string()).optional()
+      products: z
+        .array(
+          z.union([
+            z.string(),
+            z.object({
+              _id: z.string()
+            })
+          ])
+        )
+        .optional()
     })
     .optional(),
   stats: z
@@ -111,6 +134,7 @@ type HomePageFormValues = z.infer<typeof homePageSchema>
 
 export default function HomePage() {
   const [loading, setLoading] = useState(false)
+  const [productsList, setProductsList] = useState<ProductType[]>([])
 
   // Initialize the form with react-hook-form
   const form = useForm<HomePageFormValues>({
@@ -131,10 +155,10 @@ export default function HomePage() {
       setLoading(true)
       try {
         const response = await getHomePageData()
-        console.log('homepage data', response)
         if (response.success && response.data) {
           // Reset form with fetched data
           form.reset(response.data)
+          console.log('response product', response)
         }
       } catch (error) {
         console.error('Error fetching homepage data:', error)
@@ -145,20 +169,47 @@ export default function HomePage() {
     }
 
     fetchData()
-  }, [form])
+  }, [])
+
+  // Fetch products for selection
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await getProducts()
+        if (response.success && response.data) {
+          setProductsList(response.data)
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error)
+      }
+    }
+
+    fetchProducts()
+  }, [])
 
   // Handle form submission
   async function onSubmit(values: HomePageFormValues) {
     setLoading(true)
 
     try {
+      // Create a copy of the values to modify
+      const formData = JSON.parse(JSON.stringify(values))
+
+      // Ensure products is an array of strings (IDs)
+      if (formData.products?.products) {
+        // Make sure we're sending an array of string IDs
+        formData.products.products = formData.products.products.map((id: any) =>
+          typeof id === 'object' && id._id ? id._id : id
+        )
+      }
+
       // Use the POST API endpoint
       const response = await fetch('/api/v1/homepage', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify(formData)
       })
 
       const result = await response.json()
@@ -428,11 +479,73 @@ export default function HomePage() {
                     )}
                   />
 
-                  {/* Products selector will be added here */}
-                  <div className='p-4 border border-dashed rounded-md'>
-                    <p className='text-sm text-muted-foreground'>
-                      Product selection will be implemented in a future update.
-                    </p>
+                  <div className='space-y-4'>
+                    <FormLabel>Featured Products</FormLabel>
+                    {productsList.length === 0 ? (
+                      <div className='p-4 border border-dashed rounded-md'>
+                        <p className='text-sm text-muted-foreground'>
+                          No products available. Please add products first.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto p-2 border rounded-md'>
+                        {productsList.map((product) => (
+                          <div
+                            key={product._id}
+                            className='flex items-center space-x-2 p-2 border rounded-md'
+                          >
+                            <FormField
+                              control={form.control}
+                              name='products.products'
+                              render={({ field }) => (
+                                <FormItem className='flex items-center space-x-2 space-y-0'>
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.some((item) =>
+                                        typeof item === 'string'
+                                          ? item === product._id
+                                          : item._id === product._id
+                                      )}
+                                      onCheckedChange={(checked) => {
+                                        const currentProducts = field.value || []
+                                        if (checked) {
+                                          field.onChange([...currentProducts, product._id])
+                                        } else {
+                                          field.onChange(
+                                            currentProducts.filter((item) =>
+                                              typeof item === 'string'
+                                                ? item !== product._id
+                                                : item._id !== product._id
+                                            )
+                                          )
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <div className='flex items-center space-x-2'>
+                                    {product.images &&
+                                      product.images.length > 0 &&
+                                      product.images[0].thumbnail && (
+                                        <div className='h-8 w-8 bg-gray-100 rounded overflow-hidden'>
+                                          <img
+                                            src={product.images[0].thumbnail}
+                                            alt='product'
+                                            className='h-full w-full object-cover'
+                                          />
+                                        </div>
+                                      )}
+                                    <span className='font-medium'>{product.title}</span>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <FormDescription>
+                      Select the products that you want to showcase on your homepage.
+                    </FormDescription>
                   </div>
                 </CardContent>
               </Card>

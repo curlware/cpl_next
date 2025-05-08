@@ -27,13 +27,13 @@ const homePageSchema = new Schema(
     },
     products: {
       title: String,
-      description: String
-      // products: [
-      //   {
-      //     type: Schema.Types.ObjectId,
-      //     ref: 'product'
-      //   }
-      // ]
+      description: String,
+      products: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'product'
+        }
+      ]
     },
     stats: {
       title: String,
