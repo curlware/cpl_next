@@ -2,8 +2,6 @@ import { connectToDatabase } from '@/configs/dbConnect'
 import Products from '@/models/Product'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic'
-
 // GET a single product by ID
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
