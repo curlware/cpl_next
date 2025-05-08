@@ -63,7 +63,7 @@ export async function login({ email, password }: LoginInput) {
     // Set session cookie
     const session: SessionData = {
       user: {
-        id: userObject.id,
+        id: userObject._id,
         email: userObject.email
       }
     }
@@ -87,7 +87,7 @@ export async function logout() {
   try {
     // Clear the session cookie
     const cookieStore = await cookies()
-    cookieStore.delete('sessionId')
+    cookieStore.delete('session')
 
     revalidatePath('/')
     return { success: true }

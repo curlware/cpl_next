@@ -4,15 +4,10 @@ import { connectToDatabase } from '@/configs/dbConnect'
 import User from '@/models/User'
 import { revalidatePath } from 'next/cache'
 
-type UserInput = {
-  email: string
-  password: string
-}
-
 /**
  * Create a new user
  */
-export async function createUser(userData: UserInput) {
+export async function createUser(userData: TUser) {
   try {
     await connectToDatabase()
 
@@ -23,7 +18,7 @@ export async function createUser(userData: UserInput) {
     }
 
     // Create new user
-    const user = await User.create(userData)
+    await User.create(userData)
 
     revalidatePath('/dashboard/users')
     return { success: true }
@@ -86,7 +81,7 @@ export async function getUserById(id: string) {
 /**
  * Update a user
  */
-export async function updateUser(id: string, userData: Partial<UserInput>) {
+export async function updateUser(id: string, userData: Partial<TUser>) {
   try {
     await connectToDatabase()
 

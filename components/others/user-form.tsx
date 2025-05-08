@@ -13,14 +13,13 @@ import {
   FormMessage
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { User } from '@/lib/types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
 interface UserFormProps {
-  user?: User
+  user?: TUser & { _id: string } // Optional user prop for updating
   onSuccess?: () => void
 }
 
