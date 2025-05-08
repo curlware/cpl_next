@@ -1,6 +1,6 @@
 'use client'
 
-import { getSharedData, updateSharedData } from '@/actions/data/shared'
+import { getSharedData } from '@/actions/data/shared'
 import ImageUploader from '@/components/others/ImageUploader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,10 +14,18 @@ import {
   FormMessage
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { SOCIAL_PLATFORMS } from '@/configs/reset-data'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Trash2 } from 'lucide-react'
+import { PlusCircle, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -63,6 +71,34 @@ const sharedFormSchema = z.object({
         )
         .optional()
     })
+    .optional(),
+  footer: z
+    .object({
+      contactoffice: z
+        .array(
+          z.object({
+            key: z.string().optional(),
+            value: z.string().optional()
+          })
+        )
+        .optional(),
+      contactfactory: z
+        .array(
+          z.object({
+            key: z.string().optional(),
+            value: z.string().optional()
+          })
+        )
+        .optional(),
+      sociallinks: z
+        .array(
+          z.object({
+            icon: z.string().optional(),
+            link: z.string().optional()
+          })
+        )
+        .optional()
+    })
     .optional()
 })
 
@@ -93,6 +129,11 @@ export default function SharedDataPage() {
           fileId: ''
         },
         items: []
+      },
+      footer: {
+        contactoffice: [],
+        contactfactory: [],
+        sociallinks: []
       }
     }
   })
@@ -121,13 +162,24 @@ export default function SharedDataPage() {
   // Handle form submission
   async function onSubmit(values: SharedFormValues) {
     setLoading(true)
-    try {
-      const response = await updateSharedData(values)
 
-      if (response.success) {
+    try {
+      // Use the POST API endpoint instead of the server action
+      const response = await fetch('/api/v1/shared', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(values)
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
         toast.success('Shared data has been updated')
       } else {
-        toast.error(response.error || 'Failed to update shared data')
+        toast.error(result.error || 'Failed to update shared data')
+        console.error('Error details from server:', result.details)
       }
     } catch (error) {
       console.error('Error updating shared data:', error)
@@ -148,6 +200,7 @@ export default function SharedDataPage() {
               <TabsTrigger value='general'>General</TabsTrigger>
               <TabsTrigger value='navigation'>Navigation</TabsTrigger>
               <TabsTrigger value='cta'>Call to Action</TabsTrigger>
+              <TabsTrigger value='footer'>Footer</TabsTrigger>
             </TabsList>
 
             <TabsContent value='general'>
@@ -432,6 +485,240 @@ export default function SharedDataPage() {
                       </FormItem>
                     )}
                   />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value='footer'>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Footer Settings</CardTitle>
+                  <CardDescription>
+                    Manage your site's footer information and social links
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-8'>
+                  {/* Office Contact Information */}
+                  <div>
+                    <h3 className='text-lg font-medium mb-4'>Office Contact Information</h3>
+                    <div className='space-y-4'>
+                      {(form.watch('footer.contactoffice') || []).map((_, index) => (
+                        <div key={index} className='grid grid-cols-5 gap-4 mb-4'>
+                          <FormField
+                            control={form.control}
+                            name={`footer.contactoffice.${index}.key`}
+                            render={({ field }) => (
+                              <FormItem className='col-span-2'>
+                                <FormLabel>Label</FormLabel>
+                                <FormControl>
+                                  <Input placeholder='Address, Phone, Email, etc.' {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`footer.contactoffice.${index}.value`}
+                            render={({ field }) => (
+                              <FormItem className='col-span-2'>
+                                <FormLabel>Value</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder='123 Main St, +1 555-123-4567, etc.'
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='self-center mt-6'
+                            onClick={() => {
+                              const items = form.getValues('footer.contactoffice') || []
+                              items.splice(index, 1)
+                              form.setValue('footer.contactoffice', items)
+                            }}
+                          >
+                            <Trash2 size={16} className='text-destructive' />
+                          </Button>
+                        </div>
+                      ))}
+
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        className='mt-2'
+                        onClick={() => {
+                          const items = form.getValues('footer.contactoffice') || []
+                          items.push({ key: '', value: '' })
+                          form.setValue('footer.contactoffice', items)
+                        }}
+                      >
+                        <PlusCircle className='mr-2 h-4 w-4' />
+                        Add Office Contact
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Factory Contact Information */}
+                  <div>
+                    <h3 className='text-lg font-medium mb-4'>Factory Contact Information</h3>
+                    <div className='space-y-4'>
+                      {(form.watch('footer.contactfactory') || []).map((_, index) => (
+                        <div key={index} className='grid grid-cols-5 gap-4 mb-4'>
+                          <FormField
+                            control={form.control}
+                            name={`footer.contactfactory.${index}.key`}
+                            render={({ field }) => (
+                              <FormItem className='col-span-2'>
+                                <FormLabel>Label</FormLabel>
+                                <FormControl>
+                                  <Input placeholder='Address, Phone, Email, etc.' {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`footer.contactfactory.${index}.value`}
+                            render={({ field }) => (
+                              <FormItem className='col-span-2'>
+                                <FormLabel>Value</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder='456 Factory Rd, +1 555-987-6543, etc.'
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='self-center mt-6'
+                            onClick={() => {
+                              const items = form.getValues('footer.contactfactory') || []
+                              items.splice(index, 1)
+                              form.setValue('footer.contactfactory', items)
+                            }}
+                          >
+                            <Trash2 size={16} className='text-destructive' />
+                          </Button>
+                        </div>
+                      ))}
+
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        className='mt-2'
+                        onClick={() => {
+                          const items = form.getValues('footer.contactfactory') || []
+                          items.push({ key: '', value: '' })
+                          form.setValue('footer.contactfactory', items)
+                        }}
+                      >
+                        <PlusCircle className='mr-2 h-4 w-4' />
+                        Add Factory Contact
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Social Links */}
+                  <div>
+                    <h3 className='text-lg font-medium mb-4'>Social Media Links</h3>
+                    <div className='space-y-4'>
+                      {(form.watch('footer.sociallinks') || []).map((_, index) => (
+                        <div key={index} className='grid grid-cols-5 gap-4 mb-4'>
+                          <FormField
+                            control={form.control}
+                            name={`footer.sociallinks.${index}.icon`}
+                            render={({ field }) => (
+                              <FormItem className='col-span-2'>
+                                <FormLabel>Platform</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder='Select platform' />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {SOCIAL_PLATFORMS.map((platform) => (
+                                      <SelectItem key={platform} value={platform}>
+                                        {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`footer.sociallinks.${index}.link`}
+                            render={({ field }) => (
+                              <FormItem className='col-span-2'>
+                                <FormLabel>URL</FormLabel>
+                                <FormControl>
+                                  <Input placeholder='https://www.example.com/profile' {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='self-center mt-6'
+                            onClick={() => {
+                              const items = form.getValues('footer.sociallinks') || []
+                              items.splice(index, 1)
+                              form.setValue('footer.sociallinks', items)
+                            }}
+                          >
+                            <Trash2 size={16} className='text-destructive' />
+                          </Button>
+                        </div>
+                      ))}
+
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        className='mt-2'
+                        onClick={() => {
+                          const items = form.getValues('footer.sociallinks') || []
+                          items.push({ icon: '', link: '' })
+                          form.setValue('footer.sociallinks', items)
+                        }}
+                      >
+                        <PlusCircle className='mr-2 h-4 w-4' />
+                        Add Social Link
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

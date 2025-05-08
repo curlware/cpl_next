@@ -29,17 +29,40 @@ type Navigation = {
   items?: NavItem[]
 }
 
-// Shared data type
 type SharedDataType = {
-  favicon?: MediaFile
+  favicon?: {
+    thumbnail?: string
+    file?: string
+    fileId?: string
+  }
   title?: string
   description?: string
   keywords?: string
   ctatext?: string
   ctalink?: string
-  nav?: Navigation
-  createdAt?: Date
-  updatedAt?: Date
+  nav?: {
+    logo?: {
+      thumbnail?: string
+      file?: string
+      fileId?: string
+    }
+    items?: Array<{
+      title?: string
+      link?: string
+      children?: Array<{
+        title?: string
+        link?: string
+      }>
+    }>
+  }
+  footer?: {
+    contactoffice?: Array<{ key?: string; value?: string }>
+    contactfactory?: Array<{ key?: string; value?: string }>
+    sociallinks?: Array<{
+      icon?: string
+      link?: string
+    }>
+  }
 }
 
 // Navigation specific type

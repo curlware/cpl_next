@@ -9,13 +9,11 @@ export async function updateSharedData(data: Partial<SharedDataType>) {
     await connectToDatabase()
 
     // Find the first document or create one if it doesn't exist
-    const result = await SharedData.findOneAndUpdate(
+    await SharedData.findOneAndUpdate(
       {}, // empty filter to match any document
       { $set: data }, // Use $set to only update the specified fields
       {
-        new: true,
-        upsert: true, // create if doesn't exist
-        runValidators: true
+        upsert: true // create if doesn't exist
       }
     )
 

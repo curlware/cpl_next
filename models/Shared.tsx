@@ -1,6 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
 
-// Define the Site Content schema
 const sharedSchema = new Schema(
   {
     favicon: {
@@ -13,6 +12,16 @@ const sharedSchema = new Schema(
     keywords: String,
     ctatext: String,
     ctalink: String,
+    footer: {
+      contactoffice: [{ key: String, value: String }],
+      contactfactory: [{ key: String, value: String }],
+      sociallinks: [
+        {
+          icon: String,
+          link: String
+        }
+      ]
+    },
     nav: {
       logo: {
         thumbnail: String,
