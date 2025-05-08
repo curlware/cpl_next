@@ -2,8 +2,6 @@ import { connectToDatabase } from '@/configs/dbConnect'
 import SharedData from '@/models/Shared'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic'
-
 export async function POST(request: NextRequest) {
   try {
     // Parse the request body

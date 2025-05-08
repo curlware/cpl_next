@@ -13,6 +13,7 @@ const sharedSchema = new Schema(
     ctatext: String,
     ctalink: String,
     footer: {
+      copywrite: String,
       contactoffice: [{ key: String, value: String }],
       contactfactory: [{ key: String, value: String }],
       sociallinks: [

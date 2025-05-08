@@ -74,6 +74,7 @@ const sharedFormSchema = z.object({
     .optional(),
   footer: z
     .object({
+      copywrite: z.string().optional(),
       contactoffice: z
         .array(
           z.object({
@@ -131,6 +132,7 @@ export default function SharedDataPage() {
         items: []
       },
       footer: {
+        copywrite: '',
         contactoffice: [],
         contactfactory: [],
         sociallinks: []
@@ -157,7 +159,7 @@ export default function SharedDataPage() {
     }
 
     fetchData()
-  }, [form])
+  }, [])
 
   // Handle form submission
   async function onSubmit(values: SharedFormValues) {
@@ -498,6 +500,27 @@ export default function SharedDataPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='space-y-8'>
+                  {/* Copyright Text */}
+                  <FormField
+                    control={form.control}
+                    name='footer.copywrite'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Copyright Text</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='© 2025 Your Company Name. All rights reserved.'
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Copyright text displayed at the bottom of your website
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Office Contact Information */}
                   <div>
                     <h3 className='text-lg font-medium mb-4'>Office Contact Information</h3>
